@@ -1,25 +1,49 @@
 import sqlite3
-import os
+
+con = sqlite3.connect("musix.db")
+
+cur = con.cursor()
+
+cur.execute('''
+            CREATE TABLE IF NOT EXISTS playlist(
+            PlayID INTEGER PRIMARY KEY,
+            PlaylistName varchar(100)
+            )''')
+
+con.commit()
+
+cur.execute('''
+
+            CREATE TABLE IF NOT EXISTS songs(
+            SongID INT PRIMARY KEY,
+            SongName VARCHAR(100),
+            SongPlayTime INT,
+            SongArtist VARCHAR(100),
+            SongOrder INT,
+            PlayID INT,
+            FOREIGN KEY (PlayID) REFERENCES playlist(PlayID)
+            )    ''')
+
+con.commit()
+
+def CheckPlaylist(playlist) -> bool:
+    '''CHECKS FOR PLAYLIST NAME IN DATABASE, RETURNS BOOLEAN'''
+    exists = cur.execute("SELECT EXISTS(SELECT 1 FROM playlist where PlaylistName = (?))", (playlist,),).fetchone()
+    return (bool(exists[0]))
 
 
-db_path = os.path.expanduser("~/.musix/musix.db")
+def CreatePlaylist(playlist : str):
+    con.execute('''INSERT INTO playlist (PlaylistName) VALUES (?)''', (playlist,))
+    con.commit()
+    return True
 
-def get_connection():
-    '''Get a connection'''
 
-    os.makedirs(os.path.dirname(db_path), exist_ok=True)
-    return sqlite3.connect(db_path)
+def DeletePlaylist(playlist : str):
+    res = con.execute('''DELETE FROM playlist WHERE PlaylistName = (?)''', (playlist,))
+    con.commit()
 
-def init_db():
+    return res.rowcount > 0
 
-    with get_connection() as conn:
-        conn.execute("""
-CREATE TABLE IF NOT EXIST playlist(
-                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                     name TEXT UNIQUE NOT NULL,
-                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)
-                     """)
-        
-        conn.execute("""
-
-                     """)
+if __name__ == "__main__":
+    CheckPlaylist()
+    CreatePlaylist()
