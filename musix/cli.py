@@ -1,6 +1,7 @@
 import typer
 from rich.console import Console
 from player import get_stream_url, stream_song, search_songs
+from db import CheckPlaylist, CreatePlaylist, DeletePlaylist
 
 app = typer.Typer()
 console = Console()
@@ -71,8 +72,24 @@ def download():
     pass
 
 @app.command()
-def histort():
+def history():
     pass
+
+@app.command()
+def playlist(name : str):
+    if not CheckPlaylist(name) :
+        if CreatePlaylist(name):
+            console.print(f"[green]{name}[/green] Created Successfully !")
+    else :
+        console.print("Playlist Already Created!")
+
+@app.command()
+def deletePlaylist(name : str):
+    if DeletePlaylist(name):
+        console.print(f"[red]{name}[/red] successfully deleted!")
+    else :
+        console.print("[yellow]ERROR[/yellow]")
+
 
 if __name__ == "__main__":
     app()
