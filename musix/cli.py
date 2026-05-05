@@ -1,7 +1,7 @@
 import typer
 from rich.console import Console
 from player import get_stream_url, stream_song, search_songs
-from db import CheckPlaylist, CreatePlaylist, DeletePlaylist
+from db import CheckPlaylist, CreatePlaylist, DeletePlaylist, addSongToPlaylist
 
 app = typer.Typer()
 console = Console()
@@ -89,6 +89,45 @@ def deletePlaylist(name : str):
         console.print(f"[red]{name}[/red] successfully deleted!")
     else :
         console.print("[yellow]ERROR[/yellow]")
+
+@app.command()
+def addSong(name : str, playlist : str):
+    searched_songs = search_songs(name)
+
+    '''Print searched_songs'''
+
+    console.print(f"[cyan]Searching for[/cyan] {name}")
+    i = 1
+    store = list()
+    for song_details in searched_songs:
+        console.print(f"[green]{i}[/green] {song_details["title"]} - {song_details["duration"]//60}:{song_details["duration"]%60:02d} ")
+        store.append({song_details["youtube_id"] : [song_details["title"], song_details["duration"], song_details["channel"]]})
+        i += 1
+    i -= 1
+        
+    console.print()
+    choice = typer.prompt(f"Pick a number from 1 to {i} to add the song: ")
+
+    try:
+        choice = int(choice)
+    except ValueError:
+        console.print(f"[yellow]Enter a valid number[/yellow]")
+        typer.Exit()
+
+    if choice == 0:
+        raise typer.Exit()
+    elif choice >= i:
+        console.print(f"[yellow]Enter a valid number[/yellow]")
+    else :
+        (song_id, [song_title, song_duration, song_channel]), = store[choice-1].items()
+        console.print(f"[green]Selected[/green] : {song_title}")
+        
+    song_duration = int(song_duration)
+    addSongToPlaylist(song_title, playlist, song_id, song_duration, song_channel)
+
+    
+
+    
 
 
 if __name__ == "__main__":
