@@ -1,11 +1,35 @@
 import typer
 from rich.console import Console
 from player import get_stream_url, stream_song, search_songs
-from db import CheckPlaylist, CreatePlaylist, DeletePlaylist, addSongToPlaylist
+from db import CheckPlaylist, CreatePlaylist, DeletePlaylist, addSongToPlaylist, getPlaylistSongs
 
 app = typer.Typer()
 console = Console()
 
+@app.callback(invoke_without_command=True)
+def main_callback(ctx: typer.Context):
+    """
+    A terminal-based music player powered by yt-dlp and mpv.
+    """
+    if ctx.invoked_subcommand is None:
+        logo = r'''
+[bold cyan]
+  __  __ _    _  _____ _______   __
+ |  \/  | |  | |/ ____|_   _\ \ / /
+ | \  / | |  | | (___   | |  \ V / 
+ | |\/| | |  | |\___ \  | |   > <  
+ | |  | | |__| |____) |_| |_ / . \ 
+ |_|  |_|\____/|_____/|_____/_/ \_\
+[/bold cyan]'''
+        console.print(logo)
+        console.print("[bold green]Welcome to Musix![/bold green] Play your favorite songs directly from the terminal.\n")
+        console.print("Getting Started:")
+        console.print("  [cyan]musix play \"song name\"[/cyan]       - Instantly stream a song.")
+        console.print("  [cyan]musix search \"song name\"[/cyan]     - Search and select from top results.")
+        console.print("  [cyan]musix playlist \"name\"[/cyan]        - Create your own playlist.")
+        console.print("  [cyan]musix add-song \"song name\"[/cyan] - Add a song to a playlist.")
+        console.print("  [cyan]musix play-playlist \"playlist name\" [/cyan] - Play a playlist.")
+        console.print("\nRun [green]musix --help[/green] for a full list of commands.\n")
 
 @app.command()
 def search(query : str):
@@ -47,25 +71,42 @@ def search(query : str):
     selected = result[choice - 1]
     console.print(f"\n[green]▶ Playing:[/green] {selected['title']}")
 
-    url, title = get_stream_url(
+    url, title, sub_url = get_stream_url(
     f"https://www.youtube.com/watch?v={selected['youtube_id']}"
 )
 
-    stream_song(url)
+    stream_song(url, sub_url)
 
 @app.command()
 def play(query : str):
     '''stream a song'''
     console.print(f'[green]> Searching:[/green] {query}')
 
-    url, title = get_stream_url(query)
+    url, title, sub_url = get_stream_url(query)
 
     console.print(f'[green]-> Now Playing:[/green] {title}')
     console.print('[dim]Press q to stop[/dim]')
+    console.print('[dim]Press p to pause/un-pause[/dim]')
 
-    stream_song(url)
+    stream_song(url, sub_url)
 
+@app.command()
+def play_playlist(playlist : str):
+    '''Play all songs in a playlist'''
+    if not CheckPlaylist(playlist):
+        console.print(f"[red]Playlist '{playlist}' does not exist![/red]")
+        raise typer.Exit()
+        
+    songs = getPlaylistSongs(playlist)
+    if not songs:
+        console.print(f"[yellow]Playlist '{playlist}' is empty.[/yellow]")
+        raise typer.Exit()
 
+    console.print(f"[green]Playing Playlist:[/green] {playlist}")
+    for song_id, song_name in songs:
+        console.print(f"\n[cyan]▶ Now Playing:[/cyan] {song_name}")
+        url, title, sub_url = get_stream_url(f"https://www.youtube.com/watch?v={song_id}")
+        stream_song(url, sub_url)
 
 @app.command()
 def download():
@@ -130,5 +171,8 @@ def addSong(name : str, playlist : str):
     
 
 
-if __name__ == "__main__":
+def main():
     app()
+
+if __name__ == "__main__":
+    main()

@@ -1,7 +1,7 @@
 import yt_dlp
 import subprocess
 
-def get_stream_url(query : str) -> tuple[str,str]:
+def get_stream_url(query : str) -> tuple[str,str,str]:
     '''Inputs : format, mode of stdout, playlist preference, and searching site'''
 
     ydl_opts = {
@@ -10,6 +10,9 @@ def get_stream_url(query : str) -> tuple[str,str]:
         "no_warnings" : True,
         "noplaylist" : True,
         "default_search" : "ytsearch1",
+        "writesubtitles" : True,
+        "writeautomaticsub" : True,
+        "subtitleslangs" : ["en", "HI"]
         # "quiet" : True,
         # "noplaylist" : True,
         # "default_search" : "ytsearch1", 
@@ -17,15 +20,25 @@ def get_stream_url(query : str) -> tuple[str,str]:
     }
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(query, download=False)
+        search_query = query if query.startswith(("http://", "https://")) else f"ytsearch1:{query}"
+        info = ydl.extract_info(search_query, download=False)
 
-        if "entires" in info:
-            entry = list(info["entries"][0])
+        if "entries" in info:
+            entry = info["entries"][0]
         else:
             entry = info
 
         # entries = list(info["entries"])
         # entry = entries[0]
+
+        sub_url = None
+        subs = entry.get("subtitles") or entry.get("automatic_captions") or {}
+
+        if "en" in subs:
+            for sub in subs["en"]:
+                if sub.get("ext") == "vtt":
+                    sub_url = sub["url"]
+                    break
 
         if "requested_formats" in entry:
             url = entry["requested_formats"][0]["url"]
@@ -34,22 +47,24 @@ def get_stream_url(query : str) -> tuple[str,str]:
             audio_formats = [f for f in formats if f.get("acodec") != "none" and f.get("vcodec") == "none"]
             best = max(audio_formats, key=lambda f : f.get("abr") or 0)
             url = best["url"]
-        return url, entry["title"]
+        return url, entry["title"], sub_url
     
 
-def stream_song(url : str):
+def stream_song(url : str, sub_url : str = None):
     '''stream audio using mpv.'''
-    subprocess.run([
-        "ffplay",
-        "-nodisp",          
-        "-autoexit", 
-        "-loglevel", "quiet",        
-        url
-    ])
+    cmd = [
+        "mpv",
+        "--video=no",
+        "--terminal=yes",
+        "--msg-level=all=error,statusline=status"
+    ]
+    
+    if sub_url:
+        cmd.append(f"--sub-file={sub_url}")
+        
+    cmd.append(url)
 
-    subprocess.run(
-        ["mpv", "--no-audio", "--really-quiet", url]
-    )
+    subprocess.run(cmd)
 
 def search_songs(query : str) -> list[dict]:
     '''yt-dlp fetches top 5 results
@@ -65,7 +80,8 @@ def search_songs(query : str) -> list[dict]:
     }
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(query, download=False)
+        search_query = query if query.startswith(("http://", "https://")) else f"ytsearch5:{query}"
+        info = ydl.extract_info(search_query, download=False)
         entries = list(info["entries"])
         result = []
         for entry in entries:

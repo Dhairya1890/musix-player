@@ -59,6 +59,13 @@ def DeletePlaylist(playlist : str):
 
     return res.rowcount > 0
 
+def getPlaylistSongs(playlist : str) -> list:
+    playID = con.execute("SELECT PlayID from playlist WHERE PlaylistName = (?)", (playlist,)).fetchone()
+    if playID:
+        res = con.execute("SELECT SongID, SongName from songs WHERE PlayID = (?)", (playID[0],)).fetchall()
+        return res
+    return []
+
 def testing(playlist : str):
     playID = con.execute("SELECT PlayID from playlist WHERE PlaylistName = (?)", (playlist,)).fetchone()
     #res = con.execute("SELECT SongName from songs WHERE PlayID = (?)", (playid,)).fetchall()
