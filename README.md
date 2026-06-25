@@ -105,6 +105,36 @@ graph TD
 
 ---
 
+## Database Design
+
+```mermaid
+erDiagram
+    playlist {
+        INTEGER PlayID PK
+        VARCHAR PlaylistName
+    }
+
+    songs {
+        VARCHAR SongID PK
+        VARCHAR SongName
+        INT SongPlayTime
+        VARCHAR SongArtist
+        INT SongOrder
+        INT PlayID FK
+    }
+
+    history {
+        INTEGER id PK
+        TEXT song_name
+        TEXT youtube_id
+        TIMESTAMP played_at
+    }
+
+    playlist ||--o{ songs : "has"
+```
+
+---
+
 ## Play Flow
 
 ```mermaid
