@@ -92,15 +92,15 @@ No audio is stored unless you explicitly use `musix download`.
 
 ```mermaid
 graph TD
-    CLI["CLI — cli.py\n(Typer commands)"]
+    CLI["CLI — cli.py<br/>(Typer commands)"]
 
-    CLI --> Player["Player — player.py\n(yt-dlp + mpv)"]
-    CLI --> DB["Database — db.py\n(SQLite)"]
+    CLI --> Player["Player — player.py<br/>(yt-dlp + mpv)"]
+    CLI --> DB["Database — db.py<br/>(SQLite)"]
 
-    Player --> YTDLP["yt-dlp\nFetches audio URL from YouTube"]
-    Player --> MPV["mpv\nStreams audio in terminal"]
+    Player --> YTDLP["yt-dlp<br/>Fetches audio URL from YouTube"]
+    Player --> MPV["mpv<br/>Streams audio in terminal"]
 
-    DB --> SQLite["musix.db\nPlaylists · Songs · History"]
+    DB --> SQLite["musix.db<br/>Playlists · Songs · History"]
 ```
 
 ---
