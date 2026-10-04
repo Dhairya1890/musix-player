@@ -42,6 +42,9 @@ def stream_song(url: str):
         "mpv",
         "--video=no",
         "--terminal=yes",
+        "--force-window=no",
+        "terminal=yes",
+        "vo=null",
         "--msg-level=all=error,statusline=status",
         url,
     ]
