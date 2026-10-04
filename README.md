@@ -30,7 +30,7 @@ Music Apps has ads, skip limits, and pulls you out of your flow. Browser players
 ## Installation
 
 ```bash
-pip install musix-cli-player
+pip install musix-player
 ```
 
 ---
